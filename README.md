@@ -81,10 +81,6 @@ Sheets:
 | **SESSIONS** | `telegram_user`, `pantalla_actual`, `paso_actual`, `datos_parciales` | Estado del wizard del **estudiante** (multi-paso). |
 | **SESSIONS_TUTOR** | `telegram_user`, `pantalla_actual`, `paso_actual`, `datos_parciales` | Estado del wizard del **tutor**. |
 
-> Los IDs de la hoja de cálculo (`documentId`) y de las hojas quedaron
-> preconfigurados con la credencial de Google Sheets del autor original.
-> **Debes reemplazarlos por tu propio Spreadsheet ID** al importar los flujos
-> (ver sección 5).
 
 ### Máquina de estados de una tutoría
 
@@ -143,9 +139,6 @@ Pasos del flujo **"Solicitar Tutoría"**:
   tutorías de los últimos 7 días por estado, materia y tutor, y envía el
   resumen a la coordinación académica por Telegram.
 
-> ⚠️ En el nodo `Generar Reporte Semanal` reemplaza la constante
-> `COORDINADOR_CHAT_ID = 'PON_AQUI_EL_CHAT_ID_DEL_COORDINADOR'` por el
-> `chat_id` real de la persona/canal que recibirá el reporte.
 
 ### 4.3 Portal del Tutor — `TutorBot_-_Portal_Tutor.json`
 
@@ -212,18 +205,25 @@ el estado correspondiente en `TUTORIAS`, liberando el slot en
 
 ### 5.3 Capturas del flujo
 
-> 📸 Agrega aquí las capturas de pantalla del **canvas de n8n** (ambos
-> workflows) y de una conversación real de Telegram probando el wizard, por
-> ejemplo en `docs/capturas/`. Los diagramas de esta sección (Mermaid) sirven
-> como referencia de la lógica mientras se agregan las capturas reales.
+![](docs/capturas/canvas-portal-estudiante.png)
+![](docs/capturas/canvas-portal-tutor.png)
+![](docs/capturas/credenciales-google-sheets.png)
+![](docs/capturas/credenciales-telegram.png)
+![](docs/capturas/sheets-tutorbot-db.png)
+![](docs/capturas/telegram-01-start.png)
+![](docs/capturas/telegram-02-solicitar-materia.png)
+![](docs/capturas/telegram-03-fecha.png)
+![](docs/capturas/telegram-04-confirmacion.png)
+![](docs/capturas/telegram-06-consultar.png)
+![](docs/capturas/telegram-07-cancelar.png)
+![](docs/capturas/tutor-01-identificacion.png)
+![](docs/capturas/tutor-02-confirmar.png)
+![](docs/capturas/tutor-03-finalizar.png)
 
 ```
 docs/
 └── capturas/
-    ├── canvas-portal-estudiante.png
-    ├── canvas-portal-tutor.png
-    ├── telegram-solicitar-tutoria.png
-    └── telegram-confirmar-tutor.png
+    ├── Todas las imagenes de soporte del proyecto
 ```
 
 ---

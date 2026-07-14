@@ -5,8 +5,7 @@ Telegram, usando **Google Sheets** como base de datos y un motor de asignación
 que cruza materia + disponibilidad para eliminar la coordinación manual de
 tutorías.
 
-> Repositorio: `Proyecto_TutorBot_ApellidoNombre`
-> *(Renombrar con el apellido y nombre del integrante o del grupo antes de la entrega).*
+> Repositorio: `Proyecto_TutorBot_Anderson_Mariana
 
 ---
 
@@ -238,16 +237,7 @@ Proyecto_TutorBot_ApellidoNombre/
 │   ├── TutorBot_-_Reportes_y_Recordatorios.json   # Portal estudiante + reportes + recordatorios
 │   └── TutorBot_-_Portal_Tutor.json               # Portal tutor
 └── docs/
-    └── capturas/                                   # Screenshots del canvas y del bot (agregar)
+    └── capturas/                                   # Screenshots del canvas y del bot
 ```
 
 ---
-
-## 7. Entregables
-
-- [x] Repositorio de GitHub `Proyecto_TutorBot_ApellidoNombre` (renombrar antes de subir).
-- [ ] Integrante(s) del grupo — completar según lo defina el trainer.
-- [x] `README.md` con instrucciones y diagramas del flujo.
-- [x] Archivos `.json` con los flujos completos de n8n (`/workflows`).
-- [ ] Acceso compartido al Google Sheets `TutorBot_DB` — compartir con el
-      correo indicado por el trainer.

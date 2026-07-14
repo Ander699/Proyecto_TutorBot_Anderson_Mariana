@@ -241,3 +241,10 @@ Proyecto_TutorBot_ApellidoNombre/
 ```
 
 ---
+
+## 7. Link de Sheets
+
+(https://docs.google.com/spreadsheets/d/1HHuLoi-cLJtpQ9evuGu0qHDU9dBfRi_6eZsmCtnF2yk/edit?usp=sharing)
+
+
+---

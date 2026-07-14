@@ -540,7 +540,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const d = $('Motor de Estados Tutor').first().json;\nconst filas = $input.all().map(i => i.json);\nconst activas = filas.filter(f => ['Asignada', 'Confirmada'].includes(f.estado));\nlet texto;\nif (!activas.length) {\n  texto = '📭 No tienes tutorías activas asignadas actualmente.';\n} else {\n  texto = '📚 Tus tutorías:\\n\\n' + activas.map(t =>\n    `• ID ${t.id_tutoria} — ${t.materia}\\n  📅 ${t.fecha} 🕐 ${t.hora}\\n  Estado: ${t.estado}`\n  ).join('\\n\\n');\n}\nreturn [{ json: { chat_id: d.chat_id, telegram_user: d.telegram_user, respuesta: texto,\n  pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }) } }];"
+        "jsCode": "const d = $('Motor de Estados Tutor').first().json;\nconst filas = $input.all().map(i => i.json);\nconst activas = filas.filter(f => ['Asignada', 'Confirmada'].includes(f.estado));\nlet texto;\nif (!activas.length) {\n  texto = '📭 No tienes tutorías activas asignadas actualmente.';\n} else {\n  texto = '📚 Tus tutorías:\\n\\n' + activas.map(t =>\n    `• ID ${t.id_tutoria} — ${t.materia}\\n  📅 ${t.fecha} 🕐 ${t.hora}\\n  Estado: ${t.estado}`\n  ).join('\\n\\n') + '\\n\\n✅ Escribe /confirmar para CONFIRMAR una tutoría, /finalizar para marcarla como FINALIZADA, o /cancelar para CANCELARLA.\\nEn cualquiera de esas opciones, usa el ID que ves arriba (ej. ' + activas[0].id_tutoria + ').';\n}\nreturn [{ json: { chat_id: d.chat_id, telegram_user: d.telegram_user, respuesta: texto,\n  pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }) } }];"
       },
       "id": "2dbd64d1-ca37-47c9-9c26-b5016e778226",
       "name": "Formatear Mis Tutorias",
@@ -713,7 +713,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const d = $('Validar Confirmar').first().json;\nconst t = d.tutoria;\nreturn [{ json: {\n  chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: `✅ Confirmaste la tutoría #${t.id_tutoria} (${t.materia} el ${t.fecha} a las ${t.hora}).`,\n  pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }),\n  telegram_estudiante: String(t.id_estudiante || ''),\n  aviso_estudiante: `✅ Tu tutor confirmó la tutoría de ${t.materia} el ${t.fecha} a las ${t.hora}.`\n} }];"
+        "jsCode": "const d = $('Validar Confirmar').first().json;\nconst t = d.tutoria;\nreturn [{ json: {\n  chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: `✅ Confirmaste la tutoría #${t.id_tutoria} (${t.materia} el ${t.fecha} a las ${t.hora}).\\n\\nEscribe /start o /mistutorias para volver al menú.`,\n  pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }),\n  telegram_estudiante: String(t.id_estudiante || ''),\n  aviso_estudiante: `✅ Tu tutor confirmó la tutoría de ${t.materia} el ${t.fecha} a las ${t.hora}.`\n} }];"
       },
       "id": "0125e095-c441-4c30-b490-2d913e595910",
       "name": "Respuesta Confirmar",
@@ -986,7 +986,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const d = $('Validar Finalizar').first().json;\nconst t = d.tutoria;\nreturn [{ json: {\n  chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: `🏁 Marcaste como FINALIZADA la tutoría #${t.id_tutoria} (${t.materia}).`,\n  pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }),\n  telegram_estudiante: String(t.id_estudiante || ''),\n  aviso_estudiante: `🏁 Tu tutoría de ${t.materia} del ${t.fecha} fue marcada como finalizada. ¡Gracias por participar!`\n} }];"
+        "jsCode": "const d = $('Validar Finalizar').first().json;\nconst t = d.tutoria;\nreturn [{ json: {\n  chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: `🏁 Marcaste como FINALIZADA la tutoría #${t.id_tutoria} (${t.materia}).\\n\\nEscribe /start o /mistutorias para volver al menú.`,\n  pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }),\n  telegram_estudiante: String(t.id_estudiante || ''),\n  aviso_estudiante: `🏁 Tu tutoría de ${t.materia} del ${t.fecha} fue marcada como finalizada. ¡Gracias por participar!`\n} }];"
       },
       "id": "a319d7a4-ef52-4cf9-b929-2cbd821bab40",
       "name": "Respuesta Finalizar",
@@ -1259,7 +1259,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const d = $('Validar Cancelar').first().json;\nconst t = d.tutoria;\nreturn [{ json: {\n  chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: `🚫 Cancelaste la tutoría #${t.id_tutoria} (${t.materia}).`,\n  pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }),\n  telegram_estudiante: String(t.id_estudiante || ''),\n  aviso_estudiante: `🚫 Tu tutor canceló la tutoría de ${t.materia} del ${t.fecha}. Por favor solicita una nueva si la necesitas.`\n} }];"
+        "jsCode": "const d = $('Validar Cancelar').first().json;\nconst t = d.tutoria;\nreturn [{ json: {\n  chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: `🚫 Cancelaste la tutoría #${t.id_tutoria} (${t.materia}).\\n\\nEscribe /start o /mistutorias para volver al menú.`,\n  pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }),\n  telegram_estudiante: String(t.id_estudiante || ''),\n  aviso_estudiante: `🚫 Tu tutor canceló la tutoría de ${t.materia} del ${t.fecha}. Por favor solicita una nueva si la necesitas.`\n} }];"
       },
       "id": "2f4689e7-2e37-47fc-bd4b-2259a16bd48f",
       "name": "Respuesta Cancelar",

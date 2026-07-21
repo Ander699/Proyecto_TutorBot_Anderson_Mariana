@@ -1,0 +1,2026 @@
+{
+  "name": "TUTOR",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "0f27acc4-2766-406b-af86-63521836f6ff",
+      "name": "Disparador de Telegram Tutor",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1296,
+        688
+      ],
+      "webhookId": "b210363b-6dc8-43be-bab7-6602f761799c",
+      "credentials": {
+        "telegramApi": {
+          "id": "JZ6oVVsfs3AATIC3",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const msg = $json.message;\nconst chat_id = msg.chat ? msg.chat.id : null;\nconst from = msg.from || {};\nconst texto = (msg.text || '').trim();\nconst nombre = [from.first_name, from.last_name].filter(Boolean).join(' ');\nconst telegram_user = String(from.id || chat_id || '');\nreturn [{ json: { chat_id, texto, nombre, telegram_user } }];"
+      },
+      "id": "ac3ca7ef-6730-46d1-abda-d10ecebe495e",
+      "name": "Normalizar Mensaje Tutor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1056,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HHuLoi-cLJtpQ9evuGu0qHDU9dBfRi_6eZsmCtnF2yk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "SESSIONS_TUTOR",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "de8aa915-4fd4-4324-af90-ca5bfdf9fe11",
+      "name": "Leer Sesion Tutor",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -816,
+        688
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dbVVEcpRhIfV67L4",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Normalizar Mensaje Tutor').first().json;\nconst filas = $input.all();\nconst ses = filas.length ? filas[0].json : { pantalla_actual: '', paso_actual: '', datos_parciales: '{}' };\nlet datos = {};\ntry { datos = JSON.parse(ses.datos_parciales || '{}'); } catch (e) { datos = {}; }\n\nconst texto = (d.texto || '').trim();\nconst lower = texto.toLowerCase();\nconst idTutorSesion = datos.id_tutor || '';\nconst nombreTutorSesion = datos.nombre_tutor || '';\n\nlet ruta;\n\nif (lower === '/salir' || lower === '/cambiartutor') {\n  ruta = 'salir';\n} else if (!idTutorSesion) {\n  if (ses.pantalla_actual === 'esperando_id_tutor') {\n    ruta = 'validar_id';\n  } else {\n    ruta = 'pedir_id';\n  }\n} else if (ses.pantalla_actual === 'esperando_id_confirmar') {\n  ruta = 'confirmar_id';\n} else if (ses.pantalla_actual === 'esperando_id_finalizar') {\n  ruta = 'finalizar_id';\n} else if (ses.pantalla_actual === 'esperando_id_cancelar') {\n  ruta = 'cancelar_id';\n} else if (lower === '/mistutorias' || texto === '1') {\n  ruta = 'ver_tutorias';\n} else if (lower === '/confirmar' || texto === '2') {\n  ruta = 'pedir_confirmar';\n} else if (lower === '/finalizar' || texto === '3') {\n  ruta = 'pedir_finalizar';\n} else if (lower === '/cancelar' || texto === '4') {\n  ruta = 'pedir_cancelar';\n} else {\n  ruta = 'menu';\n}\n\nreturn [{ json: { ...d, texto, ruta, id_tutor: idTutorSesion, nombre_tutor: nombreTutorSesion } }];"
+      },
+      "id": "46e6a5d1-89f2-4343-9473-ddcf3588a944",
+      "name": "Motor de Estados Tutor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a223f7b8-a90b-4833-b701-85bc5f57c45c",
+                    "leftValue": "={{ $json.ruta }}",
+                    "rightValue": "pedir_id",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "pedir_id"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4b0630cd-3450-49b3-ae56-0463b69999b7",
+                    "leftValue": "={{ $json.ruta }}",
+                    "rightValue": "validar_id",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "validar_id"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "79bd3e8e-c2d0-411a-a562-45844bbf64c7",
+                    "leftValue": "={{ $json.ruta }}",
+                    "rightValue": "menu",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "menu"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a8eb2d38-1406-4822-8033-e69cd5dea5cc",
+                    "leftValue": "={{ $json.ruta }}",
+                    "rightValue": "ver_tutorias",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ver_tutorias"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "14610700-a4db-4b2e-a9e8-02da33c6b8bf",
+                    "leftValue": "={{ $json.ruta }}",
+                    "rightValue": "pedir_confirmar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "pedir_confirmar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "18a1e419-f05a-40cc-a39f-c52d6b6e5b41",
+                    "leftValue": "={{ $json.ruta }}",
+                    "rightValue": "confirmar_id",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "confirmar_id"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f864a42b-ef56-4316-a8c3-a41a7fddca0b",
+                    "leftValue": "={{ $json.ruta }}",
+                    "rightValue": "pedir_finalizar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "pedir_finalizar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "65a54cb8-be65-472d-97a6-2e0a4f60675d",
+                    "leftValue": "={{ $json.ruta }}",
+                    "rightValue": "finalizar_id",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "finalizar_id"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c99d39d6-059a-4478-ac17-6a97dbbfce85",
+                    "leftValue": "={{ $json.ruta }}",
+                    "rightValue": "pedir_cancelar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "pedir_cancelar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d2cb6c7e-8791-4bc6-b3c2-5e50ee2bc558",
+                    "leftValue": "={{ $json.ruta }}",
+                    "rightValue": "cancelar_id",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cancelar_id"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f1a2b3c4-1111-2222-3333-444455556666",
+                    "leftValue": "={{ $json.ruta }}",
+                    "rightValue": "salir",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "salir"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": 0
+        }
+      },
+      "id": "7bcf6c0c-a273-45ff-bfe3-cb319b70b15c",
+      "name": "Rutas de Tutor",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -288,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nreturn [{ json: { chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: '👋 ¡Hola! Para identificarte como tutor, escribe tu ID de tutor (ejemplo: T001).',\n  pantalla_actual: 'esperando_id_tutor', paso_actual: 'id', datos_parciales: '{}' } }];"
+      },
+      "id": "774202ca-be7b-4225-b091-ba70943f81b0",
+      "name": "Pedir ID Tutor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HHuLoi-cLJtpQ9evuGu0qHDU9dBfRi_6eZsmCtnF2yk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "TUTORES",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id_tutor",
+              "lookupValue": "={{ $json.texto }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "43eb9045-9f28-4ed5-98fa-3f17d170f695",
+      "name": "Leer Tutor Por ID",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        192
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dbVVEcpRhIfV67L4",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Motor de Estados Tutor').first().json;\nconst filas = $input.all();\nif (!filas.length) {\n  return [{ json: { ...d, idValido: false, motivo: 'No encontré ningún tutor con ese ID. Verifica que sea correcto (ejemplo: T001) e inténtalo de nuevo.' } }];\n}\nconst t = filas[0].json;\nif (t.estado !== 'Activo') {\n  return [{ json: { ...d, idValido: false, motivo: 'Ese tutor no está activo en el sistema. Contacta al coordinador académico.' } }];\n}\nreturn [{ json: { ...d, idValido: true, id_tutor: t.id_tutor, nombre_tutor: t.nombre } }];"
+      },
+      "id": "ec66fcb7-42e9-4fa1-bcfd-94786444edb9",
+      "name": "Verificar ID Tutor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e57602c2-8a22-4bfa-8cb2-672f8dd401c0",
+              "leftValue": "={{ $json.idValido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "50164a51-069b-4f80-92eb-cedfa90fec72",
+      "name": "Es ID Valido",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nconst texto = `✅ ¡Hola ${d.nombre_tutor}! Quedaste identificado como tutor ${d.id_tutor}.\n\nElige una opción respondiendo con el número:\n\n1️⃣ Ver mis tutorías\n2️⃣ Confirmar una tutoría\n3️⃣ Finalizar una tutoría\n4️⃣ Cancelar una tutoría\n\nTambién puedes usar /mistutorias, /confirmar, /finalizar o /cancelar.`;\nreturn [{ json: { chat_id: d.chat_id, telegram_user: d.telegram_user, respuesta: texto,\n  pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }) } }];"
+      },
+      "id": "2ca5a6ef-27ee-4beb-82ee-290acd96d6f6",
+      "name": "Guardar Identificacion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nreturn [{ json: { chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: `⚠️ ${d.motivo}`, pantalla_actual: 'esperando_id_tutor', paso_actual: 'id', datos_parciales: '{}' } }];"
+      },
+      "id": "9c565998-b2dc-4a51-9136-7196f7595ebe",
+      "name": "Reintentar ID Tutor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nconst texto = `👋 Hola ${d.nombre_tutor}! Elige una opción respondiendo con el número:\n\n1️⃣ Ver mis tutorías\n2️⃣ Confirmar una tutoría\n3️⃣ Finalizar una tutoría\n4️⃣ Cancelar una tutoría\n\nTambién puedes usar /mistutorias, /confirmar, /finalizar o /cancelar.`;\nreturn [{ json: { chat_id: d.chat_id, telegram_user: d.telegram_user, respuesta: texto,\n  pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }) } }];"
+      },
+      "id": "83033841-96de-4506-af2d-feceb41f421c",
+      "name": "Menu Tutor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HHuLoi-cLJtpQ9evuGu0qHDU9dBfRi_6eZsmCtnF2yk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "TUTORIAS",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id_tutor",
+              "lookupValue": "={{ $json.id_tutor }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "27922147-e09c-43ea-8bd9-001edb980cf5",
+      "name": "Leer Mis Tutorias Tutor",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        528
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dbVVEcpRhIfV67L4",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Motor de Estados Tutor').first().json;\nconst filas = $input.all().map(i => i.json);\nconst activas = filas.filter(f => ['Asignada', 'Confirmada'].includes(f.estado));\nlet texto;\nif (!activas.length) {\n  texto = '📭 No tienes tutorías activas asignadas actualmente.';\n} else {\n  texto = '📚 Tus tutorías:\\n\\n' + activas.map(t =>\n    `• ID ${t.id_tutoria} — ${t.materia}\\n  📅 ${t.fecha} 🕐 ${t.hora}\\n  Estado: ${t.estado}`\n  ).join('\\n\\n') + '\\n\\n✅ Escribe /confirmar para CONFIRMAR una tutoría, /finalizar para marcarla como FINALIZADA, o /cancelar para CANCELARLA.\\nEn cualquiera de esas opciones, usa el ID que ves arriba (ej. ' + activas[0].id_tutoria + ').';\n}\nreturn [{ json: { chat_id: d.chat_id, telegram_user: d.telegram_user, respuesta: texto,\n  pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }) } }];"
+      },
+      "id": "70f86dd9-7817-421f-9968-90ea6cb69e2e",
+      "name": "Formatear Mis Tutorias",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nreturn [{ json: { chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: '✏️ Escribe el ID de la tutoría que quieres CONFIRMAR (usa la opción 1 para ver tus tutorías y sus IDs).',\n  pantalla_actual: 'esperando_id_confirmar', paso_actual: 'id',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }) } }];"
+      },
+      "id": "68a0d0cc-6f35-45bc-ad76-3fdecbf95f52",
+      "name": "Pedir ID Confirmar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HHuLoi-cLJtpQ9evuGu0qHDU9dBfRi_6eZsmCtnF2yk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "TUTORIAS",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id_tutoria",
+              "lookupValue": "={{ $json.texto }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "eacf1884-725a-45a8-8f04-1ebcf440c2db",
+      "name": "Leer Tutoria Confirmar",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        848
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dbVVEcpRhIfV67L4",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "[\n  {\n    \"parameters\": {\n      \"conditions\": {\n        \"number\": [\n          {\n            \"value1\": \"={{ $json.franjas_libres }}\",\n            \"operation\": \"lessEqual\",\n            \"value2\": 1\n          }\n        ]\n      }\n    },\n    \"id\": \"validar-umbral-critico\",\n    \"name\": \"¿Disponibilidad Crítica? (<= 1)\",\n    \"type\": \"n8n-nodes-base.if\",\n    \"typeVersion\": 1,\n    \"position\": [250, 200]\n  },\n  {\n    \"parameters\": {\n      \"chatId\": \"TU_CHAT_ID_COORDINACION\",\n      \"text\": \"=⚠️ ALERTA DE DISPONIBILIDAD: El tutor {{ $json.nombre_tutor }} solo tiene {{ $json.franjas_libres }} franja(s) libre(s). Favor gestionar refuerzo.\",\n      \"additionalFields\": {}\n    },\n    \"id\": \"notificacion-coordinacion\",\n    \"name\": \"Alerta Coordinación\",\n    \"type\": \"n8n-nodes-base.telegram\",\n    \"typeVersion\": 1,\n    \"position\": [480, 180]\n  },\n  {\n    \"parameters\": {\n      \"conditions\": {\n        \"number\": [\n          {\n            \"value1\": \"={{ $json.franjas_libres }}\",\n            \"value2\": 0\n          }\n        ]\n      }\n    },\n    \"id\": \"verificar-cero-absoluto\",\n    \"name\": \"¿Llegó a 0?\",\n    \"type\": \"n8n-nodes-base.if\",\n    \"typeVersion\": 1,\n    \"position\": [700, 180]\n  },\n  {\n    \"parameters\": {\n      \"operation\": \"update\",\n      \"documentId\": \"1HHuLoi-cLJtpQ9evuGu0qHDU9dBfRi_6eZsmCtnF2yk\",\n      \"sheetName\": \"TUTORES\",\n      \"updateKey\": \"nombre_tutor\",\n      \"fields\": {\n        \"estado\": \"Inactivo\"\n      }\n    },\n    \"id\": \"inactivar-tutor-sheets\",\n    \"name\": \"Inactivar Tutor en Sheets\",\n    \"type\": \"n8n-nodes-base.googleSheets\",\n    \"typeVersion\": 3,\n    \"position\": [920, 160]\n  }\n]"
+      },
+      "id": "97a78562-630f-4247-b992-52a669f2d99d",
+      "name": "Validar Confirmar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "de23e0a3-35f0-46f2-9991-dd3e8a66c6d7",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "773031b0-28d9-4000-a100-324cfe5d25b2",
+      "name": "Es Valido Confirmar",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1HHuLoi-cLJtpQ9evuGu0qHDU9dBfRi_6eZsmCtnF2yk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "TUTORIAS",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_tutoria": "={{ $('Validar Confirmar').first().json.tutoria.id_tutoria }}",
+            "estado": "Confirmada"
+          },
+          "matchingColumns": [
+            "id_tutoria"
+          ],
+          "schema": [
+            {
+              "id": "id_tutoria",
+              "displayName": "id_tutoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "8f366554-ac64-441c-842e-beb80a14dca4",
+      "name": "Marcar Confirmada",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        720,
+        768
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dbVVEcpRhIfV67L4",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Validar Confirmar').first().json;\nconst t = d.tutoria;\nreturn [{ json: {\n  chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: `✅ Confirmaste la tutoría #${t.id_tutoria} (${t.materia} el ${t.fecha} a las ${t.hora}).\\n\\nEscribe /start o /mistutorias para volver al menú.`,\n  pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }),\n  telegram_estudiante: String(t.id_estudiante || ''),\n  aviso_estudiante: `✅ Tu tutor confirmó la tutoría de ${t.materia} el ${t.fecha} a las ${t.hora}.`\n} }];"
+      },
+      "id": "2bce0ffd-3fc5-42a1-91f3-6d9a7ad87760",
+      "name": "Respuesta Confirmar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegram_estudiante }}",
+        "text": "={{ $json.aviso_estudiante }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "c85e3251-1a54-4a66-8d76-99237f67affd",
+      "name": "Notificar Estudiante Confirmada",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1200,
+        688
+      ],
+      "webhookId": "dda44287-ac69-4a33-a1c4-cab5ab053177",
+      "credentials": {
+        "telegramApi": {
+          "id": "JZ6oVVsfs3AATIC3",
+          "name": "Telegram account 2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nreturn [{ json: { chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: `⚠️ ${d.motivo}`, pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }) } }];"
+      },
+      "id": "6e6baf7d-0307-4fa0-a216-b7d518743b23",
+      "name": "Preparar Error Confirmar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        944
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nreturn [{ json: { chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: '✏️ Escribe el ID de la tutoría que quieres marcar como FINALIZADA.',\n  pantalla_actual: 'esperando_id_finalizar', paso_actual: 'id',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }) } }];"
+      },
+      "id": "abee5026-2941-4a63-8a1c-7b862a5f62fc",
+      "name": "Pedir ID Finalizar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HHuLoi-cLJtpQ9evuGu0qHDU9dBfRi_6eZsmCtnF2yk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "TUTORIAS",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id_tutoria",
+              "lookupValue": "={{ $json.texto }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bf7429d8-681d-42d4-bf5b-6cea43a6c3a1",
+      "name": "Leer Tutoria Finalizar",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        1200
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dbVVEcpRhIfV67L4",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Motor de Estados Tutor').first().json;\nconst filas = $input.all();\nif (!filas.length) {\n  return [{ json: { ...d, valido: false, motivo: 'No encontré ninguna tutoría con ese ID.' } }];\n}\nconst t = filas[0].json;\nif (String(t.id_tutor) !== String(d.id_tutor)) {\n  return [{ json: { ...d, valido: false, motivo: 'Esa tutoría no está asignada a ti.' } }];\n}\nif (!['Asignada', 'Confirmada'].includes(t.estado)) {\n  return [{ json: { ...d, valido: false, motivo: `Esa tutoría está en estado \"${t.estado}\", no se puede finalizar.` } }];\n}\nreturn [{ json: { ...d, valido: true, tutoria: t } }];"
+      },
+      "id": "1650e536-28f6-4f1c-b504-59452c2c5493",
+      "name": "Validar Finalizar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "58c165ab-6e46-49ec-8478-7e54d246834a",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5082239f-3f56-447c-b204-fdde2828d54e",
+      "name": "Es Valido Finalizar",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1HHuLoi-cLJtpQ9evuGu0qHDU9dBfRi_6eZsmCtnF2yk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "TUTORIAS",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_tutoria": "={{ $('Validar Finalizar').first().json.tutoria.id_tutoria }}",
+            "estado": "Finalizada"
+          },
+          "matchingColumns": [
+            "id_tutoria"
+          ],
+          "schema": [
+            {
+              "id": "id_tutoria",
+              "displayName": "id_tutoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "269c1db3-926a-404d-8ab8-aa236d16367f",
+      "name": "Marcar Finalizada",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        720,
+        1120
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dbVVEcpRhIfV67L4",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1HHuLoi-cLJtpQ9evuGu0qHDU9dBfRi_6eZsmCtnF2yk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "DISPONIBILIDAD",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_dispo": "={{ $('Validar Finalizar').first().json.tutoria.id_dispo }}",
+            "estado": "Libre"
+          },
+          "matchingColumns": [
+            "id_dispo"
+          ],
+          "schema": [
+            {
+              "id": "id_dispo",
+              "displayName": "id_dispo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "4ea70bf7-2a13-4e43-b743-5460cdabb756",
+      "name": "Liberar Horario Finalizar",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        960,
+        1120
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dbVVEcpRhIfV67L4",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Validar Finalizar').first().json;\nconst t = d.tutoria;\nreturn [{ json: {\n  chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: `🏁 Marcaste como FINALIZADA la tutoría #${t.id_tutoria} (${t.materia}).\\n\\nEscribe /start o /mistutorias para volver al menú.`,\n  pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }),\n  telegram_estudiante: String(t.id_estudiante || ''),\n  aviso_estudiante: `🏁 Tu tutoría de ${t.materia} del ${t.fecha} fue marcada como finalizada. ¡Gracias por participar!`\n} }];"
+      },
+      "id": "e87f4dc4-7c57-490d-9ac2-118e1e02d543",
+      "name": "Respuesta Finalizar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegram_estudiante }}",
+        "text": "={{ $json.aviso_estudiante }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "e76a69c3-0325-4bad-9e4c-89849e5c4989",
+      "name": "Notificar Estudiante Finalizada",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        1040
+      ],
+      "webhookId": "d806d408-db7f-4319-83c9-56c7883d0c54",
+      "credentials": {
+        "telegramApi": {
+          "id": "JZ6oVVsfs3AATIC3",
+          "name": "Telegram account 2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nreturn [{ json: { chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: `⚠️ ${d.motivo}`, pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }) } }];"
+      },
+      "id": "e3680f80-63ab-41f6-8f88-0e2f46b741c7",
+      "name": "Preparar Error Finalizar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        1280
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nreturn [{ json: { chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: '✏️ Escribe el ID de la tutoría que quieres CANCELAR.',\n  pantalla_actual: 'esperando_id_cancelar', paso_actual: 'id',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }) } }];"
+      },
+      "id": "d26fa2f4-b4b0-4d16-980f-a0e37f9f4b8b",
+      "name": "Pedir ID Cancelar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        1392
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HHuLoi-cLJtpQ9evuGu0qHDU9dBfRi_6eZsmCtnF2yk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "TUTORIAS",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id_tutoria",
+              "lookupValue": "={{ $json.texto }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6eb626f4-0041-40b0-b0f5-cacb73395b87",
+      "name": "Leer Tutoria Cancelar",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        1552
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dbVVEcpRhIfV67L4",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Motor de Estados Tutor').first().json;\nconst filas = $input.all();\nif (!filas.length) {\n  return [{ json: { ...d, valido: false, motivo: 'No encontré ninguna tutoría con ese ID.' } }];\n}\nconst t = filas[0].json;\nif (String(t.id_tutor) !== String(d.id_tutor)) {\n  return [{ json: { ...d, valido: false, motivo: 'Esa tutoría no está asignada a ti.' } }];\n}\nif (!['Asignada', 'Confirmada'].includes(t.estado)) {\n  return [{ json: { ...d, valido: false, motivo: `Esa tutoría está en estado \"${t.estado}\", no se puede cancelar.` } }];\n}\nreturn [{ json: { ...d, valido: true, tutoria: t } }];"
+      },
+      "id": "1b219618-8b82-407e-aa42-604f4a9b2314",
+      "name": "Validar Cancelar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        1552
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f711c7dc-e11a-4b18-8c40-4c0d7f3d81a2",
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d132e081-d983-4695-84a3-562054814447",
+      "name": "Es Valido Cancelar",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        1552
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1HHuLoi-cLJtpQ9evuGu0qHDU9dBfRi_6eZsmCtnF2yk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "TUTORIAS",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_tutoria": "={{ $('Validar Cancelar').first().json.tutoria.id_tutoria }}",
+            "estado": "Cancelada"
+          },
+          "matchingColumns": [
+            "id_tutoria"
+          ],
+          "schema": [
+            {
+              "id": "id_tutoria",
+              "displayName": "id_tutoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "63182f52-b913-49f1-9698-b8a9058365b6",
+      "name": "Marcar Cancelada",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        720,
+        1472
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dbVVEcpRhIfV67L4",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1HHuLoi-cLJtpQ9evuGu0qHDU9dBfRi_6eZsmCtnF2yk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "DISPONIBILIDAD",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_dispo": "={{ $('Validar Cancelar').first().json.tutoria.id_dispo }}",
+            "estado": "Libre"
+          },
+          "matchingColumns": [
+            "id_dispo"
+          ],
+          "schema": [
+            {
+              "id": "id_dispo",
+              "displayName": "id_dispo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "c274db5f-d31b-452e-9b8f-c7674043e153",
+      "name": "Liberar Horario Cancelar",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        960,
+        1472
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dbVVEcpRhIfV67L4",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Validar Cancelar').first().json;\nconst t = d.tutoria;\nreturn [{ json: {\n  chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: `🚫 Cancelaste la tutoría #${t.id_tutoria} (${t.materia}).\\n\\nEscribe /start o /mistutorias para volver al menú.`,\n  pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }),\n  telegram_estudiante: String(t.id_estudiante || ''),\n  aviso_estudiante: `🚫 Tu tutor canceló la tutoría de ${t.materia} del ${t.fecha}. Por favor solicita una nueva si la necesitas.`\n} }];"
+      },
+      "id": "2e849337-3eb4-4a33-bfc2-c54efca79308",
+      "name": "Respuesta Cancelar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        1472
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegram_estudiante }}",
+        "text": "={{ $json.aviso_estudiante }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "3df142f1-7877-438d-8859-03a498758119",
+      "name": "Notificar Estudiante Cancelada",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        1392
+      ],
+      "webhookId": "f5907982-0651-43aa-80cc-4c3db85d123c",
+      "credentials": {
+        "telegramApi": {
+          "id": "JZ6oVVsfs3AATIC3",
+          "name": "Telegram account 2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: $input.first().json }];"
+      },
+      "id": "f7e2bb4d-7c56-4241-be1a-712d5d752f56",
+      "name": "Preparar Salida Tutor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.respuesta }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "acac4a85-c987-4d7b-b6ef-dfb92905f023",
+      "name": "Enviar Respuesta Tutor",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1904,
+        608
+      ],
+      "webhookId": "bb4b1014-cf47-4b29-8a98-123a84ce65e5",
+      "credentials": {
+        "telegramApi": {
+          "id": "JZ6oVVsfs3AATIC3",
+          "name": "Telegram account 2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1HHuLoi-cLJtpQ9evuGu0qHDU9dBfRi_6eZsmCtnF2yk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "SESSIONS_TUTOR",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "telegram_user": "={{ $('Preparar Salida Tutor').first().json.telegram_user }}",
+            "pantalla_actual": "={{ $('Preparar Salida Tutor').first().json.pantalla_actual }}",
+            "paso_actual": "={{ $('Preparar Salida Tutor').first().json.paso_actual }}",
+            "datos_parciales": "={{ $('Preparar Salida Tutor').first().json.datos_parciales }}"
+          },
+          "matchingColumns": [
+            "telegram_user"
+          ],
+          "schema": [
+            {
+              "id": "telegram_user",
+              "displayName": "telegram_user",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pantalla_actual",
+              "displayName": "pantalla_actual",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "paso_actual",
+              "displayName": "paso_actual",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "datos_parciales",
+              "displayName": "datos_parciales",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "7d2bca71-bc30-44a3-b1e4-65c471f30679",
+      "name": "Guardar Sesion Tutor",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1888,
+        816
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dbVVEcpRhIfV67L4",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Cierra la sesion actual del tutor para poder entrar con otro ID\nconst d = $input.first().json;\nreturn [{ json: { chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: '👋 Sesión cerrada.\\n\\nEscribe /start y luego tu ID de tutor para entrar con otra cuenta.',\n  pantalla_actual: '', paso_actual: '', datos_parciales: '{}' } }];"
+      },
+      "id": "6722c206-b669-4160-a572-28dfd0649625",
+      "name": "Cerrar Sesion Tutor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        1136
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\nreturn [{ json: { chat_id: d.chat_id, telegram_user: d.telegram_user,\n  respuesta: `⚠️ ${d.motivo}`, pantalla_actual: 'menu', paso_actual: '',\n  datos_parciales: JSON.stringify({ id_tutor: d.id_tutor, nombre_tutor: d.nombre_tutor }) } }];"
+      },
+      "id": "d9d0ac5f-17a8-4b22-abac-f95d3fa1170d",
+      "name": "Preparar Error Cancelar1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        1632
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        352,
+        336
+      ],
+      "id": "a60ddcd9-a3ce-4509-b6c6-757f1f2b320e",
+      "name": "AI Agent"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Disparador de Telegram Tutor": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Mensaje Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Mensaje Tutor": {
+      "main": [
+        [
+          {
+            "node": "Leer Sesion Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Sesion Tutor": {
+      "main": [
+        [
+          {
+            "node": "Motor de Estados Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Motor de Estados Tutor": {
+      "main": [
+        [
+          {
+            "node": "Rutas de Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rutas de Tutor": {
+      "main": [
+        [
+          {
+            "node": "Pedir ID Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer Tutor Por ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Menu Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer Mis Tutorias Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pedir ID Confirmar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer Tutoria Confirmar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pedir ID Finalizar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer Tutoria Finalizar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pedir ID Cancelar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer Tutoria Cancelar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cerrar Sesion Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Tutor Por ID": {
+      "main": [
+        [
+          {
+            "node": "Verificar ID Tutor",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar ID Tutor": {
+      "main": [
+        [
+          {
+            "node": "Es ID Valido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es ID Valido": {
+      "main": [
+        [
+          {
+            "node": "Guardar Identificacion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reintentar ID Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Mis Tutorias Tutor": {
+      "main": [
+        [
+          {
+            "node": "Formatear Mis Tutorias",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Tutoria Confirmar": {
+      "main": [
+        [
+          {
+            "node": "Validar Confirmar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Confirmar": {
+      "main": [
+        [
+          {
+            "node": "Es Valido Confirmar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es Valido Confirmar": {
+      "main": [
+        [
+          {
+            "node": "Marcar Confirmada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar Error Confirmar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar Confirmada": {
+      "main": [
+        [
+          {
+            "node": "Respuesta Confirmar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respuesta Confirmar": {
+      "main": [
+        [
+          {
+            "node": "Notificar Estudiante Confirmada",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Preparar Salida Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Tutoria Finalizar": {
+      "main": [
+        [
+          {
+            "node": "Validar Finalizar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Finalizar": {
+      "main": [
+        [
+          {
+            "node": "Es Valido Finalizar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es Valido Finalizar": {
+      "main": [
+        [
+          {
+            "node": "Marcar Finalizada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar Error Finalizar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar Finalizada": {
+      "main": [
+        [
+          {
+            "node": "Liberar Horario Finalizar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Liberar Horario Finalizar": {
+      "main": [
+        [
+          {
+            "node": "Respuesta Finalizar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respuesta Finalizar": {
+      "main": [
+        [
+          {
+            "node": "Notificar Estudiante Finalizada",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Preparar Salida Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Tutoria Cancelar": {
+      "main": [
+        [
+          {
+            "node": "Validar Cancelar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Cancelar": {
+      "main": [
+        [
+          {
+            "node": "Es Valido Cancelar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es Valido Cancelar": {
+      "main": [
+        [
+          {
+            "node": "Marcar Cancelada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar Error Cancelar1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar Cancelada": {
+      "main": [
+        [
+          {
+            "node": "Liberar Horario Cancelar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Liberar Horario Cancelar": {
+      "main": [
+        [
+          {
+            "node": "Respuesta Cancelar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respuesta Cancelar": {
+      "main": [
+        [
+          {
+            "node": "Notificar Estudiante Cancelada",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Preparar Salida Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pedir ID Tutor": {
+      "main": [
+        [
+          {
+            "node": "Preparar Salida Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar Identificacion": {
+      "main": [
+        [
+          {
+            "node": "Preparar Salida Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reintentar ID Tutor": {
+      "main": [
+        [
+          {
+            "node": "Preparar Salida Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Menu Tutor": {
+      "main": [
+        [
+          {
+            "node": "Preparar Salida Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear Mis Tutorias": {
+      "main": [
+        [
+          {
+            "node": "Preparar Salida Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pedir ID Confirmar": {
+      "main": [
+        [
+          {
+            "node": "Preparar Salida Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Error Confirmar": {
+      "main": [
+        [
+          {
+            "node": "Preparar Salida Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pedir ID Finalizar": {
+      "main": [
+        [
+          {
+            "node": "Preparar Salida Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Error Finalizar": {
+      "main": [
+        [
+          {
+            "node": "Preparar Salida Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pedir ID Cancelar": {
+      "main": [
+        [
+          {
+            "node": "Preparar Salida Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Salida Tutor": {
+      "main": [
+        [
+          {
+            "node": "Enviar Respuesta Tutor",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Guardar Sesion Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cerrar Sesion Tutor": {
+      "main": [
+        [
+          {
+            "node": "Preparar Salida Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Error Cancelar1": {
+      "main": [
+        [
+          {
+            "node": "Preparar Salida Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "05325545-2393-42e5-84ce-aa3b5ee44ae0",
+  "meta": {
+    "instanceId": "49eac9d1126efb5cc6a710249ca438a26430b9ad0dab110cb3a04ef194331d64"
+  },
+  "nodeGroups": [],
+  "id": "b0yq7aE8hj4mOzf1",
+  "tags": []
+}

@@ -248,3 +248,4 @@ Proyecto_TutorBot_ApellidoNombre/
 
 
 ---
+Tutor.json es el de la evaluacion
